@@ -100,6 +100,7 @@ while running:
     for enemy in enemies:
         for bullet in bullets:
             if bullet.rect.colliderect(enemy.rect):
+                score += 1
                 enemies.remove(enemy)
                 bullets.remove(bullet)
                 break
