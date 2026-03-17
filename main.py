@@ -2,8 +2,7 @@ import pygame
 from random import randint
 
 maxfps = 60
-window_SIZE = (800, 600)
-
+WINDOW_SIZE = (800, 600)
 
 
 class Sprite:
@@ -27,13 +26,29 @@ class MoveSprite(Sprite):
 
 pygame.init()
 
-window = pygame.Window("Tower Defense", window_SIZE)
+window = pygame.Window("Tower Defense", WINDOW_SIZE)
 surface = window.get_surface()
+surface_rect = surface.get_rect()
 clock = pygame.Clock()
 font = pygame.Font()
 
-player_image = pygame.Surface([50, 50])
-player = Sprite([window_SIZE[0]/2, window_SIZE[1]/2], player_image)
+pygame.mixer.music.load("music.mp3")
+pygame.mixer.music.set_volume(0.05)
+pygame.mixer.music.play(-1)
+
+player_image = pygame.image.load("player.png").convert_alpha()
+player_image = pygame.transform.scale(player_image, [50, 50])
+
+bullet_image = pygame.image.load("bullet.png").convert_alpha()
+bullet_image = pygame.transform.scale(bullet_image, [14, 14])
+
+enemy_image = pygame.image.load("enemy.png").convert_alpha()
+enemy_image = pygame.transform.scale(enemy_image, [50, 50])
+
+backs_image = pygame.image.load("backs.jpg").convert_alpha()
+backs_image = pygame.transform.scale(backs_image, WINDOW_SIZE)
+
+player = Sprite([WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2], player_image)
 
 bullets = []
 enemies = []
@@ -50,9 +65,7 @@ while running:
             center = pygame.Vector2(player.rect.center)
             pos = pygame.Vector2(pygame.mouse.get_pos())
             vector = (pos - center).normalize()
-            img = pygame.Surface([10, 10])
-            img.fill("blue")
-            bullet = MoveSprite(center, img, 7, vector)
+            bullet = MoveSprite(center, bullet_image, 7, vector)
             bullets.append(bullet)
 
     #обновление объектов
@@ -60,42 +73,41 @@ while running:
         r = randint(1, 4)
         if r == 1:
             pos = pygame.Vector2(
-                randint(0, window_SIZE[0]),
+                randint(0, WINDOW_SIZE[0]),
                 -100,
             )
         if r == 2:
             pos = pygame.Vector2(
-                randint(0, window_SIZE[1]),
+                randint(0, WINDOW_SIZE[1]),
                 -100,
             )
         if r == 3:
             pos = pygame.Vector2(
-                randint(0, window_SIZE[1]),
+                randint(0, WINDOW_SIZE[1]),
                 -100,
             )
         if r == 4:
             pos = pygame.Vector2(
                 -100,
-                randint(0, window_SIZE[1]),
+                randint(0, WINDOW_SIZE[1]),
             )
 
         center = pygame.Vector2(player.rect.center)
 
         vector = (center - pos).normalize()
-        img = pygame.Surface([50, 50])
-        img.fill("red")
         speed = randint(200, 600) / 100
-        enemy = MoveSprite(pos, img, speed, vector)
+        enemy = MoveSprite(pos, enemy_image, speed, vector)
         enemies.append(enemy)
         
     for bullet in bullets:
         bullet.update()
-
+        if not bullet.rect.colliderect(surface_rect):
+            bullets.remove(bullet)
     for enemy in enemies:
         enemy.update()
 
     #отрисовка
-    surface.fill("green")
+    surface.blit(backs_image, (0, 0))
 
     for enemy in enemies:
         for bullet in bullets:
@@ -119,7 +131,7 @@ while running:
     player.render(surface)
 
     text = "Баллы: " + str(score)
-    image = font.render(text, True, "black")
+    image = font.render(text, True, "white")
     surface.blit(image, [10, 10])
 
     window.flip()
